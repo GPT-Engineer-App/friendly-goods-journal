@@ -3,60 +3,75 @@ import Header from '../components/Header';
 import ShoppingList from '../components/ShoppingList';
 import Footer from '../components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
-  const [items, setItems] = useState([]);
-  const friends = ['Dinanshu', 'Prabhat', 'Nivendu'];
+  const [lists, setLists] = useState({
+    Dinanshu: [],
+    Prabhat: [],
+    Nivendu: [],
+    You: []
+  });
 
-  const addItem = (newItem) => {
-    setItems([...items, { id: Date.now(), text: newItem, purchased: false }]);
+  const addItem = (friend, newItem) => {
+    setLists(prevLists => ({
+      ...prevLists,
+      [friend]: [...prevLists[friend], { id: Date.now(), text: newItem, purchased: false }]
+    }));
   };
 
-  const togglePurchased = (id) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, purchased: !item.purchased } : item
-    ));
+  const togglePurchased = (friend, id) => {
+    setLists(prevLists => ({
+      ...prevLists,
+      [friend]: prevLists[friend].map(item => 
+        item.id === id ? { ...item, purchased: !item.purchased } : item
+      )
+    }));
   };
 
-  const deleteItem = (id) => {
-    setItems(items.filter(item => item.id !== id));
+  const deleteItem = (friend, id) => {
+    setLists(prevLists => ({
+      ...prevLists,
+      [friend]: prevLists[friend].filter(item => item.id !== id)
+    }));
   };
 
-  const clearAll = () => {
-    setItems([]);
+  const clearAll = (friend) => {
+    setLists(prevLists => ({
+      ...prevLists,
+      [friend]: []
+    }));
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {friends.map((friend, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle>{friend}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500">Friend's shopping list</p>
-              </CardContent>
-            </Card>
+        <Tabs defaultValue="You" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            {Object.keys(lists).map(friend => (
+              <TabsTrigger key={friend} value={friend}>{friend}</TabsTrigger>
+            ))}
+          </TabsList>
+          {Object.entries(lists).map(([friend, items]) => (
+            <TabsContent key={friend} value={friend}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{friend}'s Shopping List</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ShoppingList 
+                    items={items}
+                    onAddItem={(newItem) => addItem(friend, newItem)}
+                    onTogglePurchased={(id) => togglePurchased(friend, id)}
+                    onDeleteItem={(id) => deleteItem(friend, id)}
+                    onClearAll={() => clearAll(friend)}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
           ))}
-          <Card>
-            <CardHeader>
-              <CardTitle>Your List</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-500">Your shopping list</p>
-            </CardContent>
-          </Card>
-        </div>
-        <ShoppingList 
-          items={items}
-          onAddItem={addItem}
-          onTogglePurchased={togglePurchased}
-          onDeleteItem={deleteItem}
-          onClearAll={clearAll}
-        />
+        </Tabs>
       </main>
       <Footer />
     </div>
